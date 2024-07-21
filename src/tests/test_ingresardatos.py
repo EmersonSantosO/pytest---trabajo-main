@@ -1,5 +1,6 @@
 import pytest
 from src.main import ingresardatos, clientes, idcliente
+import builtins
 
 
 def setup_function():
@@ -10,7 +11,7 @@ def setup_function():
 
 def simular_input(monkeypatch, inputs):
     input_iter = iter(inputs)
-    monkeypatch.setattr("builtins.input", lambda _: next(input_iter))
+    monkeypatch.setattr(builtins, "input", lambda _: next(input_iter))
 
 
 def verificar_cliente(
@@ -41,19 +42,19 @@ def verificar_cliente(
 def test_crear_cliente(monkeypatch):
     setup_function()
     # Datos de prueba
-    run = "12345678-9"
-    nombre = "Juan"
-    apellido = "Perez"
-    direccion = "Calle Falsa 123"
-    fono = "987654321"
-    correo = "juan.perez@example.com"
-    tipo = "101"
-    monto = "10000"
+    datos_predefinidos = [
+        "12345678-9",  # run
+        "Juan",  # nombre
+        "Perez",  # apellido
+        "Calle Falsa 123",  # direccion
+        "987654321",  # fono
+        "juan.perez@example.com",  # correo
+        "101",  # tipo
+        "10000",  # monto
+    ]
 
     # Simular inputs del usuario
-    simular_input(
-        monkeypatch, [run, nombre, apellido, direccion, fono, correo, tipo, monto]
-    )
+    simular_input(monkeypatch, datos_predefinidos)
 
     # Ejecutar la función
     ingresardatos()
@@ -61,45 +62,41 @@ def test_crear_cliente(monkeypatch):
     # Verificaciones
     assert 1 in clientes, "El cliente no se ha agregado al diccionario."
     cliente = clientes[1]
-    verificar_cliente(
-        cliente, 1, run, nombre, apellido, direccion, fono, correo, tipo, monto
-    )
+    verificar_cliente(cliente, 1, *datos_predefinidos)
 
 
 def test_crear_clientes_multiple(monkeypatch):
     setup_function()
     # Datos de prueba para el primer cliente
-    run1 = "12345678-9"
-    nombre1 = "Juan"
-    apellido1 = "Perez"
-    direccion1 = "Calle Falsa 123"
-    fono1 = "987654321"
-    correo1 = "juan.perez@example.com"
-    tipo1 = "101"
-    monto1 = "10000"
+    datos_predefinidos1 = [
+        "12345678-9",
+        "Juan",
+        "Perez",
+        "Calle Falsa 123",
+        "987654321",
+        "juan.perez@example.com",
+        "101",
+        "10000",
+    ]
 
     # Datos de prueba para el segundo cliente
-    run2 = "98765432-1"
-    nombre2 = "Maria"
-    apellido2 = "Gomez"
-    direccion2 = "Avenida Siempreviva 742"
-    fono2 = "123456789"
-    correo2 = "maria.gomez@example.com"
-    tipo2 = "102"
-    monto2 = "20000"
+    datos_predefinidos2 = [
+        "98765432-1",
+        "Maria",
+        "Gomez",
+        "Avenida Siempreviva 742",
+        "123456789",
+        "maria.gomez@example.com",
+        "102",
+        "20000",
+    ]
 
     # Simular inputs del usuario para el primer cliente
-    simular_input(
-        monkeypatch,
-        [run1, nombre1, apellido1, direccion1, fono1, correo1, tipo1, monto1],
-    )
+    simular_input(monkeypatch, datos_predefinidos1)
     ingresardatos()
 
     # Simular inputs del usuario para el segundo cliente
-    simular_input(
-        monkeypatch,
-        [run2, nombre2, apellido2, direccion2, fono2, correo2, tipo2, monto2],
-    )
+    simular_input(monkeypatch, datos_predefinidos2)
     ingresardatos()
 
     # Verificar que ambos clientes se hayan agregado al diccionario
@@ -108,15 +105,11 @@ def test_crear_clientes_multiple(monkeypatch):
 
     # Verificar el primer cliente
     cliente1 = clientes[1]
-    verificar_cliente(
-        cliente1, 1, run1, nombre1, apellido1, direccion1, fono1, correo1, tipo1, monto1
-    )
+    verificar_cliente(cliente1, 1, *datos_predefinidos1)
 
     # Verificar el segundo cliente
     cliente2 = clientes[2]
-    verificar_cliente(
-        cliente2, 2, run2, nombre2, apellido2, direccion2, fono2, correo2, tipo2, monto2
-    )
+    verificar_cliente(cliente2, 2, *datos_predefinidos2)
 
 
 @pytest.mark.parametrize(
@@ -208,5 +201,7 @@ def test_crear_cliente_invalid_data(monkeypatch, cliente_invalid_datos):
     setup_function()
     # Simular inputs del usuario
     simular_input(monkeypatch, cliente_invalid_datos)
-    with pytest.raises(ValueError):
-        ingresardatos()
+    ingresardatos()
+
+    # Verificar que no se ha agregado ningún cliente al diccionario
+    assert len(clientes) == 0, "No se debería agregar un cliente con datos inválidos."
